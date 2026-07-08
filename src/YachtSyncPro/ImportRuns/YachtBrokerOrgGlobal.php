@@ -135,6 +135,7 @@
 		                'LastModificationDate' => 'UpdatedTimestamp',
 		                'WaterTankCapacityMeasure' => 'FreshWaterCapacityGallons',
 		                'FuelTankCapacityMeasure' => 'FuelTankCapacityGallons' ,
+						'HoldingTankCapacityMeasure' => 'HoldingTankCapacityGallons',
 		                'DryWeightMeasure' => 'DryWeight' ,
 		                'CabinsCountNumeric' => 'CabinCount',
 		                'HeadsCountNumeric' => 'HeadCount',
