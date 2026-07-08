@@ -146,14 +146,20 @@
 				$keywords=$query->get('ys_keyword_content');
 
 				if (is_array($keywords)) {
-					foreach ($keywords as $keyw) {
-						//$where .= " AND $wpdb->posts.post_content LIKE '%".$keyw." %' ";	
+					$keywords=join(' ', $keywords);
+
+					//$where .= " OR ( $wpdb->posts.post_title LIKE '%".$keywords."%' )  ";
+				
+					/*foreach ($keywords as $keyw) {
+						$where .= " OR $wpdb->posts.post_title LIKE '%".$keyw." %' ";	
 						//$where .= " OR $wpdb->posts.post_content LIKE '%{$keyw} %' ";	
-					}
+					}*/
 
 				}
 				else {
-					//$where .= " AND $wpdb->posts.post_content LIKE '%".$keywords." %' ";	
+					// $wpdb->posts.post_content LIKE '%".$keywords."%'  OR
+					//$where .= " OR ( $wpdb->posts.post_title LIKE '%".$keywords."%' )  ";
+					//var_dump($keywords);
 				}
 
 
@@ -211,7 +217,7 @@
 								'compare' => "LIKE",
 								'value' => $keyword
 							],
-							
+
 							[	
 								'key' => 'ModelYear',
 								'type' => 'NUMERIC',
@@ -230,7 +236,13 @@
 								'compare' => "LIKE",
 								'value' => $keyword
 							],
-				
+			
+							[
+								'key' => '_yoast_wpseo_metadesc',
+								'compare' => "LIKE",
+								'value' => $keyword
+							],	
+
 							[
 								'key' => 'LengthOverall',
 								'compare' => "LIKE",
@@ -253,20 +265,7 @@
 								'key' => 'YSP_Full_State',
 								'compare' => "LIKE",
 								'value' => $keyword
-							],
-
-							[									
-								'key' => 'BoatLocation',
-								'compare' => "LIKE",
-								'value' => $keyword
-							],
-
-							/*[									
-								'key' => 'GeneralBoatDescription',
-            					'compare' => 'LIKE',
-								'value' => "[[:<:]]{$keyword}[[:>:]]", // matches exaclty "123", not just 123. This prevents a match for "1234"
-							],*/
-
+							]
 
 						];
 					}

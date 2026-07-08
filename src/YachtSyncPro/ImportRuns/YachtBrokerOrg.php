@@ -133,7 +133,8 @@
 		                'BeamMeasure' => 'BeamFeet',
 		                'LastModificationDate' => 'UpdatedTimestamp',
 		                'WaterTankCapacityMeasure' => 'FreshWaterCapacityGallons',
-		                'FuelTankCapacityMeasure' => 'FuelTankCapacityGallons' ,
+		                'FuelTankCapacityMeasure' => 'FuelTankCapacityGallons',
+						'HoldingTankCapacityMeasure' => 'HoldingTankCapacityGallons',
 		                'DryWeightMeasure' => 'DryWeight' ,
 		                'CabinsCountNumeric' => 'CabinCount',
 		                'HeadsCountNumeric' => 'HeadCount',
@@ -176,6 +177,29 @@
 		            }
 
 		            $theBoat['Images'] = $images;
+
+					if (isset($row['Media']['YoutubeIDs'])) {
+						$youtubeVideoData = [];
+						foreach ($row['Media']['YoutubeIDs'] as $media) {
+							$youtubeVideoData[] = (object) [
+								'YoutubeID' => $media['YoutubeVideoID'],
+								'Title' => $media['YoutubeVideoTitle'],
+							];
+						}
+
+						$theBoat['YSP_YouTubeData'] = $youtubeVideoData;
+					}
+					
+					if (isset($row['Media']['VirtualTours'])) {
+						$virtualTourData = [];
+						foreach ($row['Media']['VirtualTours'] as $tour) {
+							$virtualTourData[] = (object) [
+								'URL' => $tour['VirtualTourURL'],
+							];
+						}
+
+						$theBoat['YSP_VirtualTours'] = $virtualTourData;
+					}
 
 					if (isset($row['NominalLength'])) {
 						$theBoat['YSP_Length'] = (int) $row['NominalLength'];
@@ -318,6 +342,9 @@
 	                    ],
 	                ]);
 
+					$pdf_still_e = false;
+		           	$yacht_updated = false;
+
 		           	if (! isset($find_post_from_synced[0]->ID)) {
 			            if (! empty($record['BoatHullID'])) {
 			                $find_post_from_synced=get_posts([
@@ -428,8 +455,8 @@
 
 					wp_set_post_terms($y_post_id, $theBoat['MakeString'], 'boatmaker', false);
 					wp_set_post_terms($y_post_id, $theBoat['BoatClassCode'], 'boatclass', false);
-					//wp_set_post_terms($y_post_id, $theBoat['BoatCategoryCode'], 'boattype', false);
-					//wp_set_post_terms($y_post_id, $theBoat['SaleClassCode'], 'boatcondition', false);
+					wp_set_post_terms($y_post_id, $theBoat['BoatCategoryCode'], 'boattype', false);
+					wp_set_post_terms($y_post_id, $theBoat['SaleClassCode'], 'boatcondition', false);
 
 					if ($this->opt_prerender_brochures == 'yes' && $pdf_still_e == false && ! in_array($theBoat['SalesStatus'], ['Sold', 'Suspend']) ) {
 

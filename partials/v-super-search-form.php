@@ -19,7 +19,7 @@
         </div>
 
         <div class="ysp-s-field">
-            <label>Type</label>
+            <label>Category</label>
             <div class="selection-overflow">
             
                 <?php 
@@ -43,7 +43,7 @@
             
             <div class="selection-overflow">
                 <?php 
-                    echo "<label><input type='checkbox' name='make' value='' style='width: auto;'> All</label>";
+                    echo "<label><input type='checkbox' name='boatmaker' value='' style='width: auto;'> All</label>";
                    
                     $YSP_DBHelper = new YachtSyncPro_DBHelper();
 
@@ -51,7 +51,7 @@
 
                     foreach ($builders as $build) {
 
-                        echo "<label><input type='checkbox' name='make' value='$build' style='width: auto;'> $build</label>";
+                        echo "<label><input type='checkbox' name='boatmaker' value='$build' style='width: auto;'> $build</label>";
 
                     }
                 ?>
@@ -102,7 +102,24 @@
         </div>
         
         <div class="ysp-s-field">
-            <label>Length</label>
+             <div class="labal-with-toggles">
+                <label>Length</label>
+                    
+                <div class="toggles">
+                    <input type="radio" name="lengthunit" id="ysp-lenghtft-qs" checked="" value="Feet" />
+                    
+                    <label class="" for="ysp-lenghtft-qs">
+                        FT
+                    </label>
+
+                    <input type="radio" name="lengthunit" id="ysp-lenghtm-qs" value="Meter" />
+                    
+                    <label class="" for="ysp-lenghtm-qs">
+                        M
+                    </label>
+                </div>
+            </div>    
+
             <div class="min-max-container">
                 <input type="number" name="lengthlo" placeholder="Min"/>
                 <span>-</span>
@@ -111,7 +128,24 @@
         </div>
         
         <div class="ysp-s-field">
-            <label>Price</label>
+            <div class="labal-with-toggles">
+                <label>Price</label>
+                    
+                <div class="toggles">
+                    <input type="radio" name="currency" id="ysp-currency-switcher-usd-qs" value="Usd" checked="" />
+
+                    <label class="" for="ysp-currency-switcher-usd-qs">
+                        USD
+                    </label>
+
+                    <input type="radio" class="btn-check" name="currency" id="ysp-currency-switcher-eur-qs" value="Eur" />
+                    
+                    <label class="" for="ysp-currency-switcher-eur-qs">
+                        EUR
+                    </label>
+                </div>
+            </div>    
+
             <div class="min-max-container">
                 <input type="number" name="pricelo" placeholder="Min"/>
                 <span>-</span>
@@ -246,7 +280,23 @@
             </div>
 
             <div class="ysp-s-field">
-                <label>Length</label>
+                 <div class="labal-with-toggles">
+                    <label>Length</label>
+                        
+                    <div class="toggles">
+                        <input type="radio" name="lengthunit" id="ysp-lenghtft-ms" checked="" value="Feet" />
+                        
+                        <label class="" for="ysp-lenghtft-ms">
+                            FT
+                        </label>
+
+                        <input type="radio" name="lengthunit" id="ysp-lenghtm-ms" value="Meter" />
+                        
+                        <label class="" for="ysp-lenghtm-ms">
+                            M
+                        </label>
+                    </div>
+                </div>     
                 
                 <div class="min-max-container">
                     <input type="number" label="Length Above" name="lengthlo" placeholder="Min"/>
@@ -256,7 +306,23 @@
             </div>
 
             <div class="ysp-s-field">
-                <label>Price</label>
+                <div class="labal-with-toggles">
+                    <label>Price</label>
+                        
+                    <div class="toggles">
+                        <input type="radio" name="currency" id="ysp-currency-switcher-usd-ms" value="Usd" checked="" />
+ 
+                        <label class="" for="ysp-currency-switcher-usd-ms">
+                            USD
+                        </label>
+
+                        <input type="radio" class="btn-check" name="currency" id="ysp-currency-switcher-eur-ms" value="Eur" />
+                        
+                        <label class="" for="ysp-currency-switcher-eur-ms">
+                            EUR
+                        </label>
+                    </div>
+                </div>    
 
                 <div class="min-max-container">
                     <input type="number" label="Price Above" name="pricelo" placeholder="Min"/>
