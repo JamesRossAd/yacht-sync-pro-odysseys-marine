@@ -59,6 +59,21 @@
 
     $images = get_post_meta( $post->ID, 'Images', true );
 
+	$youtube_data = get_post_meta( $post->ID, 'YSP_YouTubeData', true );
+	if ( ! is_array( $youtube_data ) ) {
+		$youtube_data = [];
+	}
+
+	$virtual_tours = get_post_meta( $post->ID, 'YSP_VirtualTours', true );
+	if ( ! is_array( $virtual_tours ) ) {
+		$virtual_tours = [];
+	}
+
+	$yacht_additional_detail_description = get_post_meta( $post->ID, 'AdditionalDetailDescription', true );
+	if ( is_array( $yacht_additional_detail_description ) ) {
+		$yacht_additional_detail_description = $yacht_additional_detail_description[0] ?? '';
+	}
+
    // var_dump($images);
 /*
     $yacht_ysp_image_1 = $images[0]->Uri;
@@ -88,14 +103,47 @@
 <div id="yacht-nested-metabox-basics">
     <div class="metafield">
         <label>General Boat Description</label>
-        <textarea name="General_Boat_Description" style="width: 100%; height: 300px;">
-            <?php if (isset($yacht_ysp_general_boat_description[0])) : ?>
-                <?= $yacht_ysp_general_boat_description[0] ?>
-            <?php else: ?>
-
-            <?php endif; ?>
-        </textarea>
+        <textarea name="General_Boat_Description" style="width: 100%; height: 300px;"><?php
+			if ( isset( $yacht_ysp_general_boat_description[0] ) ) {
+				echo esc_textarea( $yacht_ysp_general_boat_description[0] );
+			} elseif ( is_string( $yacht_ysp_general_boat_description ) ) {
+				echo esc_textarea( $yacht_ysp_general_boat_description );
+			}
+		?></textarea>
     </div>
+	<div class="metafield">
+		<label>Additional Detail Description</label>
+		<textarea name="Additional_Detail_Description" style="width: 100%; height: 200px;"><?= esc_textarea( (string) $yacht_additional_detail_description ) ?></textarea>
+		<p class="description">Shown as Features / Notable Upgrades on the listing page.</p>
+	</div>
+
+	<h3 style="margin-top:24px;">Videos (YouTube)</h3>
+	<p class="description">Paste a YouTube URL or 11-character video ID. These power the Video section on the listing page.</p>
+	<?php for ( $v = 0; $v < 3; $v++ ) :
+		$yt_id = isset( $youtube_data[ $v ]->YoutubeID ) ? $youtube_data[ $v ]->YoutubeID : '';
+		$yt_title = isset( $youtube_data[ $v ]->Title ) ? $youtube_data[ $v ]->Title : '';
+	?>
+		<div class="metafield">
+			<label>YouTube Video <?= $v + 1 ?> ID / URL</label>
+			<input type="text" name="YSP_YouTube_<?= $v ?>" value="<?= esc_attr( $yt_id ) ?>" placeholder="https://www.youtube.com/watch?v=...">
+		</div>
+		<div class="metafield">
+			<label>YouTube Video <?= $v + 1 ?> Title</label>
+			<input type="text" name="YSP_YouTube_Title_<?= $v ?>" value="<?= esc_attr( $yt_title ) ?>" placeholder="Optional title">
+		</div>
+	<?php endfor; ?>
+
+	<h3 style="margin-top:24px;">Virtual Tours</h3>
+	<p class="description">Full embeddable tour URL (Matterport, YachtCloser, etc.).</p>
+	<?php for ( $t = 0; $t < 2; $t++ ) :
+		$tour_url = isset( $virtual_tours[ $t ]->URL ) ? $virtual_tours[ $t ]->URL : '';
+	?>
+		<div class="metafield">
+			<label>Virtual Tour <?= $t + 1 ?> URL</label>
+			<input type="url" name="YSP_VirtualTour_<?= $t ?>" value="<?= esc_attr( $tour_url ) ?>" placeholder="https://...">
+		</div>
+	<?php endfor; ?>
+
     <div class="metafield">
         <label>YSP Sales Rep Party ID</label>
         <input type="text" name="YSP_Sales_Rep_Party_ID" value="<?= $yacht_ysp_sales_rep_party_id ?>">
@@ -249,7 +297,8 @@
 		margin-bottom: 10px;
 	}
 
-	#yacht-nested-metabox-basics .metafield input{
+	#yacht-nested-metabox-basics .metafield input,
+	#yacht-nested-metabox-basics .metafield textarea{
 		display: block;
 		width: 100%;
 		max-width: 500px;

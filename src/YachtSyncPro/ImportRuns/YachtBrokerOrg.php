@@ -362,7 +362,11 @@
 			            else {
 			                $find_post_from_synced=[];
 			            }
-		           	}	        	         
+		           	}
+
+					if (isset($find_post_from_synced[0]->ID) && YachtSyncPro_Yachts_MetaIsManual::is_manual_entry($find_post_from_synced[0]->ID)) {
+						$find_post_from_synced = [];
+					}
 					
 					if (isset($find_post_from_synced[0]->ID)) {
 	                	$synced_post_id = $find_post_from_synced[0]->ID;
