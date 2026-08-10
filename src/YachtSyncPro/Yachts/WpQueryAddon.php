@@ -359,6 +359,14 @@
 						'value' => $query->get('status')
 					];
 				}
+				else {
+					// Hide sold/inactive by default. YachtBroker uses On; boats.com uses Active/On-Order.
+					$yacht_sync_meta_query[] = [
+						'key' => 'SalesStatus',
+						'compare' => 'IN',
+						'value' => ['On', 'Active', 'On-Order', 'SalePending'],
+					];
+				}
 				
 				if (is_array($query->get('hull'))) {
 					$yacht_sync_meta_query[]=[

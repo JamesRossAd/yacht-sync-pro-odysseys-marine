@@ -86,7 +86,13 @@
 		        }
 
 				foreach ($apiBody['V-Data'] as $row) {
-		            $yachtSynced++; 
+		            $yachtSynced++;
+
+					// YachtBroker returns sold/inactive inventory in /vessel — only keep active listings.
+					$row_status = isset($row['Status']) ? trim((string) $row['Status']) : '';
+					if (! in_array($row_status, ['On', 'Active'], true)) {
+						continue;
+					}
 		           	
 		           	$theBoat=[
 		           		'BoatLocation' => (object) [
