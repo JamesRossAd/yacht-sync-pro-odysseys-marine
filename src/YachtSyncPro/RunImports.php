@@ -95,20 +95,14 @@
 	        if ($count_of_synced > $this->low_count) {
 		       	$wpdb->query( 
 					$wpdb->prepare( 
-						"
-						DELETE wp FROM $wpdb->posts wp
-						WHERE 
-						wp.post_type = %s 
-						AND 
-						wp.ID NOT IN (
-							SELECT ID FROM (
-								SELECT wp.ID as ID FROM $wpdb->posts wp
-								LEFT JOIN $wpdb->postmeta pm ON pm.post_id = wp.ID 
-								WHERE wp.post_type = %s AND pm.meta_key = 'is_yacht_manual_entry' AND pm.meta_value = 'yes'
-							) manual_entered_yachts
-						)
-						",
-						'ysp_yacht',
+						"DELETE wp FROM {$wpdb->posts} wp
+						WHERE wp.post_type = %s
+						AND NOT EXISTS (
+							SELECT 1 FROM {$wpdb->postmeta} pm
+							WHERE pm.post_id = wp.ID
+							AND pm.meta_key = 'is_yacht_manual_entry'
+							AND pm.meta_value = 'yes'
+						)",
 						'ysp_yacht'
 					)
 				);
@@ -155,19 +149,18 @@
 
 		       	$wpdb->query( 
 					$wpdb->prepare( 
-						"DELETE wp FROM $wpdb->posts wp 
-						LEFT JOIN $wpdb->postmeta pm ON pm.post_id = wp.ID 
-						WHERE 
-						wp.post_type = %s AND pm.meta_key = %s AND pm.meta_value = '1' 
-						AND 
-						wp.ID NOT IN (
-							SELECT ID FROM (
-								SELECT wp.ID as ID FROM $wpdb->posts wpdisable cron
-								LEFT JOIN $wpdb->postmeta pm ON pm.post_id = wp.ID 
-								WHERE wp.post_type = %s AND pm.meta_key = 'is_yacht_manual_entry' AND pm.meta_value = 'yes'
-							) manual_entered_yachts
+						"DELETE wp FROM {$wpdb->posts} wp
+						INNER JOIN {$wpdb->postmeta} pm_company
+							ON pm_company.post_id = wp.ID
+							AND pm_company.meta_key = %s
+							AND pm_company.meta_value = '1'
+						WHERE wp.post_type = %s
+						AND NOT EXISTS (
+							SELECT 1 FROM {$wpdb->postmeta} pm
+							WHERE pm.post_id = wp.ID
+							AND pm.meta_key = 'is_yacht_manual_entry'
+							AND pm.meta_value = 'yes'
 						)", 
-						'ysp_yacht',
 						'CompanyBoat',
 						'ysp_yacht'
 					)

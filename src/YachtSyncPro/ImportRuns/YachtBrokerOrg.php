@@ -85,7 +85,13 @@
 		        }
 
 				foreach ($apiBody['V-Data'] as $row) {
-		            $yachtSynced++; 
+		            $yachtSynced++;
+
+					// YachtBroker returns sold/inactive inventory — only keep active listings.
+					$row_status = isset($row['Status']) ? trim((string) $row['Status']) : '';
+					if (! in_array($row_status, ['On', 'Active'], true)) {
+						continue;
+					}
 		           	
 		           	$theBoat=[
 		           		'BoatLocation' => (object) [
@@ -362,7 +368,11 @@
 			            else {
 			                $find_post_from_synced=[];
 			            }
-		           	}	        	         
+		           	}
+
+					if (isset($find_post_from_synced[0]->ID) && YachtSyncPro_Yachts_MetaIsManual::is_manual_entry($find_post_from_synced[0]->ID)) {
+						$find_post_from_synced = [];
+					}
 					
 					if (isset($find_post_from_synced[0]->ID)) {
 	                	$synced_post_id = $find_post_from_synced[0]->ID;
