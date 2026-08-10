@@ -82,7 +82,7 @@
 					case 'ys_company_only':
 						if (isset($params['ys_company_only'])) {
 
-							$pVal = $this->options->get('company_name');
+							$pVal = 'Featured';
 						
 						}
 
