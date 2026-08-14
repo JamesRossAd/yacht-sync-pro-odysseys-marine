@@ -64,11 +64,15 @@
 		public function ysp_yacht_nested_data_save($post_id) {
 			if ( isset($_POST['is_yacht_manual_entry']) && $_POST['is_yacht_manual_entry'] == 'yes') {
 
-				$general_boat_description = isset($_POST['General_Boat_Description']) ? trim( wp_unslash( $_POST['General_Boat_Description'] ) ) : '';
+				$general_boat_description = isset( $_POST['General_Boat_Description'] )
+					? trim( wp_kses_post( wp_unslash( $_POST['General_Boat_Description'] ) ) )
+					: '';
 
 				update_post_meta($post_id, 'GeneralBoatDescription', [ $general_boat_description ]);
 
-				$additional_detail_description = isset($_POST['Additional_Detail_Description']) ? trim( wp_unslash( $_POST['Additional_Detail_Description'] ) ) : '';
+				$additional_detail_description = isset( $_POST['Additional_Detail_Description'] )
+					? trim( wp_kses_post( wp_unslash( $_POST['Additional_Detail_Description'] ) ) )
+					: '';
 				update_post_meta($post_id, 'AdditionalDetailDescription', [ $additional_detail_description ]);
 
 				$sales_rep = (object) [
@@ -102,6 +106,25 @@
 				];
 
 				update_post_meta($post_id, 'Engines', $engines);
+
+				// Keep Yacht Info summary engine meta in sync with Engine 1 details.
+				update_post_meta( $post_id, 'YSP_EngineMake', $engines[0]->Make );
+				update_post_meta( $post_id, 'YSP_EngineModel', $engines[0]->Model );
+				update_post_meta( $post_id, 'YSP_EngineFuel', $engines[0]->Fuel );
+				update_post_meta( $post_id, 'YSP_EnginePower', $engines[0]->EnginePower );
+				update_post_meta( $post_id, 'YSP_EngineType', $engines[0]->Type );
+				update_post_meta( $post_id, 'YSP_EngineHours', $engines[0]->Hours );
+
+				$engine_count = 0;
+				foreach ( $engines as $engine ) {
+					if ( trim( (string) ( $engine->Make ?? '' ) ) !== '' || trim( (string) ( $engine->Model ?? '' ) ) !== '' ) {
+						$engine_count++;
+					}
+				}
+				if ( $engine_count > 0 && empty( $_POST['NumberOfEngines'] ) ) {
+					update_post_meta( $post_id, 'NumberOfEngines', $engine_count );
+					update_post_meta( $post_id, 'YSP_EngineCount', $engine_count );
+				}
 
 				$images = [];
 				$posted_images = [];
@@ -147,6 +170,16 @@
 					];
 				}
 				update_post_meta( $post_id, 'YSP_YouTubeData', $youtube_data );
+
+				$captains_view_360 = isset( $_POST['YSP_CaptainsView360'] )
+					? esc_url_raw( wp_unslash( $_POST['YSP_CaptainsView360'] ) )
+					: '';
+				update_post_meta( $post_id, 'YSP_CaptainsView360', $captains_view_360 );
+
+				$captains_view_360_link = isset( $_POST['YSP_CaptainsView360_Link'] )
+					? esc_url_raw( wp_unslash( $_POST['YSP_CaptainsView360_Link'] ) )
+					: '';
+				update_post_meta( $post_id, 'YSP_CaptainsView360_Link', $captains_view_360_link );
 
 				$virtual_tours = [];
 				for ( $t = 0; $t < 2; $t++ ) {

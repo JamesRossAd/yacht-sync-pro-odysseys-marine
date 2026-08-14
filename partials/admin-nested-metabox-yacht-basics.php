@@ -69,6 +69,16 @@
 		$virtual_tours = [];
 	}
 
+	$captains_view_360 = get_post_meta( $post->ID, 'YSP_CaptainsView360', true );
+	if ( ! is_string( $captains_view_360 ) ) {
+		$captains_view_360 = '';
+	}
+
+	$captains_view_360_link = get_post_meta( $post->ID, 'YSP_CaptainsView360_Link', true );
+	if ( ! is_string( $captains_view_360_link ) ) {
+		$captains_view_360_link = '';
+	}
+
 	$yacht_additional_detail_description = get_post_meta( $post->ID, 'AdditionalDetailDescription', true );
 	if ( is_array( $yacht_additional_detail_description ) ) {
 		$yacht_additional_detail_description = $yacht_additional_detail_description[0] ?? '';
@@ -101,20 +111,68 @@
 
 
 <div id="yacht-nested-metabox-basics">
-    <div class="metafield">
-        <label>General Boat Description</label>
-        <textarea name="General_Boat_Description" style="width: 100%; height: 300px;"><?php
-			if ( isset( $yacht_ysp_general_boat_description[0] ) ) {
-				echo esc_textarea( $yacht_ysp_general_boat_description[0] );
-			} elseif ( is_string( $yacht_ysp_general_boat_description ) ) {
-				echo esc_textarea( $yacht_ysp_general_boat_description );
-			}
-		?></textarea>
+    <?php
+		$summary_content = '';
+		if ( isset( $yacht_ysp_general_boat_description[0] ) ) {
+			$summary_content = (string) $yacht_ysp_general_boat_description[0];
+		} elseif ( is_string( $yacht_ysp_general_boat_description ) ) {
+			$summary_content = $yacht_ysp_general_boat_description;
+		}
+
+		$description_content = (string) $yacht_additional_detail_description;
+
+		$editor_settings = [
+			'textarea_rows' => 12,
+			'media_buttons' => true,
+			'teeny' => false,
+			'quicktags' => true,
+			'wpautop' => true,
+			'tinymce' => [
+				'resize' => true,
+				'wp_autoresize_on' => true,
+			],
+		];
+	?>
+	<h3>Descriptions</h3>
+    <div class="metafield ysp-wysiwyg-field">
+        <label for="General_Boat_Description">Summary</label>
+		<?php
+			wp_editor(
+				$summary_content,
+				'General_Boat_Description',
+				array_merge( $editor_settings, [
+					'textarea_name' => 'General_Boat_Description',
+					'textarea_rows' => 10,
+				] )
+			);
+		?>
+		<p class="description">Shown at the top of the listing description area.</p>
     </div>
+	<div class="metafield ysp-wysiwyg-field">
+		<label for="Additional_Detail_Description">Description</label>
+		<?php
+			wp_editor(
+				$description_content,
+				'Additional_Detail_Description',
+				array_merge( $editor_settings, [
+					'textarea_name' => 'Additional_Detail_Description',
+					'textarea_rows' => 14,
+				] )
+			);
+		?>
+		<p class="description">Shown below the Description heading on the listing page.</p>
+	</div>
+
+	<h3 style="margin-top:24px;">Captain's View 360</h3>
+	<p class="description">Embeddable 360 tour URL for the Captain's View 360 section (shown above Video on the listing page).</p>
 	<div class="metafield">
-		<label>Additional Detail Description</label>
-		<textarea name="Additional_Detail_Description" style="width: 100%; height: 200px;"><?= esc_textarea( (string) $yacht_additional_detail_description ) ?></textarea>
-		<p class="description">Shown as Features / Notable Upgrades on the listing page.</p>
+		<label>Captain's View 360 URL</label>
+		<input type="url" name="YSP_CaptainsView360" value="<?= esc_attr( $captains_view_360 ) ?>" placeholder="https://...">
+	</div>
+	<div class="metafield">
+		<label>Captain's View 360 External Link</label>
+		<input type="url" name="YSP_CaptainsView360_Link" value="<?= esc_attr( $captains_view_360_link ) ?>" placeholder="https://...">
+		<p class="description">Optional. If filled, a “View Full Tour” button appears under the embed and opens this URL in a new tab.</p>
 	</div>
 
 	<h3 style="margin-top:24px;">Videos (YouTube)</h3>
@@ -145,75 +203,79 @@
 	<?php endfor; ?>
 
     <div class="metafield">
-        <label>YSP Sales Rep Party ID</label>
+        <label>Sales Rep Party ID</label>
         <input type="text" name="YSP_Sales_Rep_Party_ID" value="<?= $yacht_ysp_sales_rep_party_id ?>">
     </div>
     <div class="metafield">
-        <label>YSP Sales Rep Name</label>
+        <label>Sales Rep Name</label>
         <input type="text" name="YSP_Sales_Rep_Name" value="<?= $yacht_ysp_sales_rep_name ?>">
     </div>
+
+	<h3 style="margin-top:24px;">Engine 1</h3>
     <div class="metafield">
-        <label>YSP Engine 1 Make</label>
+        <label>Make</label>
         <input type="text" name="YSP_Engine_1_Make" value="<?= $yacht_ysp_engine_1_make ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Model</label>
+        <label>Model</label>
         <input type="text" name="YSP_Engine_1_Model" value="<?= $yacht_ysp_engine_1_model ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Fuel</label>
+        <label>Fuel</label>
         <input type="text" name="YSP_Engine_1_Fuel" value="<?= $yacht_ysp_engine_1_fuel ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Engine Power</label>
+        <label>Power</label>
         <input type="text" name="YSP_Engine_1_EnginePower" value="<?= $yacht_ysp_engine_1_engine_power ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Type</label>
+        <label>Type</label>
         <input type="text" name="YSP_Engine_1_Type" value="<?= $yacht_ysp_engine_1_type ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Year</label>
+        <label>Year</label>
         <input type="text" name="YSP_Engine_1_Year" value="<?= $yacht_ysp_engine_1_year ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Hours</label>
+        <label>Hours</label>
         <input type="text" name="YSP_Engine_1_Hours" value="<?= $yacht_ysp_engine_1_hours ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 1 Boat Engine Location Code</label>
+        <label>Location Code</label>
         <input type="text" name="YSP_Engine_1_Boat_Engine_Location_Code" value="<?= $yacht_ysp_engine_1_boat_engine_location_code ?>">
     </div>
+
+	<h3 style="margin-top:24px;">Engine 2</h3>
     <div class="metafield">
-        <label>YSP Engine 2 Make</label>
+        <label>Make</label>
         <input type="text" name="YSP_Engine_2_Make" value="<?= $yacht_ysp_engine_2_make ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Model</label>
+        <label>Model</label>
         <input type="text" name="YSP_Engine_2_Model" value="<?= $yacht_ysp_engine_2_model ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Fuel</label>
+        <label>Fuel</label>
         <input type="text" name="YSP_Engine_2_Fuel" value="<?= $yacht_ysp_engine_2_fuel ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Engine Power</label>
+        <label>Power</label>
         <input type="text" name="YSP_Engine_2_EnginePower" value="<?= $yacht_ysp_engine_2_engine_power ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Type</label>
+        <label>Type</label>
         <input type="text" name="YSP_Engine_2_Type" value="<?= $yacht_ysp_engine_2_type ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Year</label>
+        <label>Year</label>
         <input type="text" name="YSP_Engine_2_Year" value="<?= $yacht_ysp_engine_2_year ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Hours</label>
+        <label>Hours</label>
         <input type="text" name="YSP_Engine_2_Hours" value="<?= $yacht_ysp_engine_2_hours ?>">
     </div>
     <div class="metafield">
-        <label>YSP Engine 2 Boat Engine Location Code</label>
+        <label>Location Code</label>
         <input type="text" name="YSP_Engine_2_Boat_Engine_Location_Code" value="<?= $yacht_ysp_engine_2_boat_engine_location_code ?>">
     </div>
 
@@ -481,6 +543,12 @@ jQuery(function($) {
 		width: 100%;
 		max-width: 500px;
 
+	}
+	#yacht-nested-metabox-basics .ysp-wysiwyg-field .wp-editor-wrap,
+	#yacht-nested-metabox-basics .ysp-wysiwyg-field .wp-editor-container,
+	#yacht-nested-metabox-basics .ysp-wysiwyg-field textarea.wp-editor-area {
+		max-width: 100%;
+		width: 100%;
 	}
     #yacht-nested-metabox-basics .metafield input[type="button"]{
         margin-top: 20px;

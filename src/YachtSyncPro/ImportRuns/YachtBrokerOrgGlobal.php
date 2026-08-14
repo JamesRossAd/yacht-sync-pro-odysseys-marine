@@ -88,6 +88,13 @@
 				foreach ($apiBody['V-Data'] as $row) {
 		            $yachtSynced++;
 
+					// Single-vessel payloads nest fields under Vessel (e.g. Summary, Description).
+					if ( isset( $row['Vessel'] ) && is_array( $row['Vessel'] ) ) {
+						$extras = $row;
+						unset( $extras['Vessel'] );
+						$row = array_merge( $extras, $row['Vessel'] );
+					}
+
 					// YachtBroker returns sold/inactive inventory in /vessel — only keep active listings.
 					$row_status = isset($row['Status']) ? trim((string) $row['Status']) : '';
 					if (! in_array($row_status, ['On', 'Active'], true)) {
@@ -182,10 +189,21 @@
 
 		           	}
 
-		           	if (isset($row['gallery'])) {
+					// Summary → GeneralBoatDescription (string or BoatWizard-style one-item array).
+					$summary = isset( $row['Summary'] ) ? trim( (string) $row['Summary'] ) : '';
+					if ( $summary !== '' ) {
+						$theBoat['GeneralBoatDescription'] = [ $summary ];
+					} else {
+						$theBoat['GeneralBoatDescription'] = [];
+					}
+
+		           	if (isset($row['gallery']) || isset($row['Gallery'])) {
 		                $images = [];
-		            
-		                foreach ($row['gallery'] as $key => $img) {
+						$gallery = isset( $row['gallery'] ) && is_array( $row['gallery'] )
+							? $row['gallery']
+							: ( isset( $row['Gallery'] ) && is_array( $row['Gallery'] ) ? $row['Gallery'] : [] );
+
+		                foreach ($gallery as $key => $img) {
 		                    $images[] = (object) [
 		                        //'Priority' => $img['Sort'],
 		                        'Caption'  => $img['Title'],
@@ -466,7 +484,9 @@
 								'post_name' => sanitize_title(
 									$theBoat['ModelYear'].'-'.$theBoat['MakeString'].'-'.$theBoat['Model']
 								),
-								'post_content' => $theBoat['GeneralBoatDescription'],
+								'post_content' => is_array( $theBoat['GeneralBoatDescription'] )
+									? join( ' ', $theBoat['GeneralBoatDescription'] )
+									: (string) $theBoat['GeneralBoatDescription'],
 								'post_status' => 'publish',
 								'meta_input' => apply_filters('ysp_yacht_meta_sync', (object) $theBoat)
 

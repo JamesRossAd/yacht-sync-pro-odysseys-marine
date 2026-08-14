@@ -74,7 +74,6 @@
 				    'SalesStatus',
 					'SaleClassCode',
 				    'BoatCategoryCode',
-				    //'BoatClassCode',
 				    'HasHullID',
 				    'BoatHullID',
 				    'BoatHullMaterialCode',
@@ -82,8 +81,6 @@
 				    'CompanyBoat',
 				    'CompanyName',
 				    'DocumentID',
-				    //'GeneralBoatDescription',
-				    //'AdditionalDetailDescription',
 				    'HeadsCountNumeric',
 				    'FuelTankCapacityMeasure',
 				    'FuelTankCountNumeric',
@@ -101,47 +98,49 @@
 					'SalesStatusWeight'
 				];
 
-				// Keep NominalLength and YSP_Length in sync for search/display.
+				// Canonical Length (ft) → NominalLength, YSP_Length, YSP_LOAFeet.
 				$nominal = isset($_POST['NominalLength']) ? trim((string) $_POST['NominalLength']) : '';
-				$length = isset($_POST['YSP_Length']) ? trim((string) $_POST['YSP_Length']) : '';
-				$loa_feet = isset($_POST['YSP_LOAFeet']) ? trim((string) $_POST['YSP_LOAFeet']) : '';
-
-				if ($nominal === '' && $length !== '') {
-					$_POST['NominalLength'] = $length;
-					$nominal = $length;
-				} elseif ($nominal === '' && $loa_feet !== '') {
-					$_POST['NominalLength'] = $loa_feet;
-					$nominal = $loa_feet;
+				if ( $nominal !== '' ) {
+					$_POST['NominalLength'] = $nominal;
+					$_POST['YSP_Length'] = is_numeric( $nominal ) ? (string) (int) $nominal : $nominal;
+					$_POST['YSP_LOAFeet'] = is_numeric( $nominal ) ? (string) $nominal : $nominal;
 				}
 
-				if ($length === '' && $nominal !== '') {
-					$_POST['YSP_Length'] = is_numeric($nominal) ? (string) (int) $nominal : $nominal;
+				// Canonical Beam (ft) → both beam meta keys.
+				$beam_ft = isset( $_POST['YSP_Beam_Feet_Measurement'] ) ? trim( (string) $_POST['YSP_Beam_Feet_Measurement'] ) : '';
+				if ( $beam_ft !== '' ) {
+					$_POST['YSP_Beam_Feet_Measurement'] = $beam_ft;
+					$_POST['YSP_BeamFeet'] = $beam_ft;
 				}
 
-				// Sync display helpers the front-end expects.
-				if ( empty( $_POST['YSP_Country'] ) && ! empty( $_POST['YSP_CountryID'] ) ) {
-					$_POST['YSP_Country'] = sanitize_text_field( wp_unslash( $_POST['YSP_CountryID'] ) );
+				// Canonical Max Draft (ft).
+				$draft_ft = isset( $_POST['YSP_Max_Draft_Feet_Measurement'] ) ? trim( (string) $_POST['YSP_Max_Draft_Feet_Measurement'] ) : '';
+				if ( $draft_ft !== '' ) {
+					$_POST['YSP_Max_Draft_Feet_Measurement'] = $draft_ft;
+					$_POST['MaxDraft'] = $draft_ft . ' ft';
 				}
 
-				if ( empty( $_POST['YSP_Beam_Feet_Measurement'] ) && isset( $_POST['YSP_BeamFeet'] ) && $_POST['YSP_BeamFeet'] !== '' ) {
-					$_POST['YSP_Beam_Feet_Measurement'] = sanitize_text_field( wp_unslash( $_POST['YSP_BeamFeet'] ) );
+				// Canonical Country → related country meta.
+				$country = isset( $_POST['YSP_Country'] ) ? sanitize_text_field( wp_unslash( $_POST['YSP_Country'] ) ) : '';
+				if ( $country !== '' ) {
+					$_POST['YSP_Country'] = $country;
+					$_POST['YSP_CountryID'] = $country;
+					$_POST['YSP_Full_Country'] = $country;
 				}
 
-				if ( empty( $_POST['NumberOfEngines'] ) && ! empty( $_POST['YSP_EngineCount'] ) ) {
-					$_POST['NumberOfEngines'] = sanitize_text_field( wp_unslash( $_POST['YSP_EngineCount'] ) );
+				// Engine count summary (details live in Other Yacht Info → Engines).
+				$engine_count = isset( $_POST['NumberOfEngines'] ) ? trim( (string) $_POST['NumberOfEngines'] ) : '';
+				if ( $engine_count !== '' ) {
+					$_POST['NumberOfEngines'] = $engine_count;
+					$_POST['YSP_EngineCount'] = $engine_count;
 				}
 
-				if ( empty( $_POST['YSP_Max_Draft_Feet_Measurement'] ) && ! empty( $_POST['MaxDraft'] ) && is_numeric( $_POST['MaxDraft'] ) ) {
-					$_POST['YSP_Max_Draft_Feet_Measurement'] = sanitize_text_field( wp_unslash( $_POST['MaxDraft'] ) );
-				}
-
+				// Canonical Price (USD).
 				$norm_price = isset( $_POST['NormPrice'] ) ? trim( (string) $_POST['NormPrice'] ) : '';
-				$price = isset( $_POST['Price'] ) ? trim( (string) $_POST['Price'] ) : '';
-				if ( $price === '' && $norm_price !== '' && is_numeric( $norm_price ) ) {
-					$_POST['Price'] = number_format( (float) $norm_price, 2, '.', '' ) . ' USD';
-				}
-				if ( ( ! isset( $_POST['YSP_USDVal'] ) || $_POST['YSP_USDVal'] === '' ) && $norm_price !== '' && is_numeric( $norm_price ) ) {
+				if ( $norm_price !== '' && is_numeric( $norm_price ) ) {
+					$_POST['NormPrice'] = $norm_price;
 					$_POST['YSP_USDVal'] = (string) (int) $norm_price;
+					$_POST['Price'] = number_format( (float) $norm_price, 2, '.', '' ) . ' USD';
 				}
 
 				foreach ($fields as $field) {
