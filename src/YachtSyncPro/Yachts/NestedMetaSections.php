@@ -2,6 +2,8 @@
 	#[AllowDynamicProperties]
 	class YachtSyncPro_Yachts_NestedMetaSections {
 
+		public const MAX_MANUAL_IMAGES = 150;
+
 		public function __construct() {
 			
 		}
@@ -10,7 +12,21 @@
 
 			add_action( 'add_meta_boxes', [ $this, 'nested_yachts_meta_boxes' ]);
 			add_action( 'save_post_ysp_yacht', [$this, 'ysp_yacht_nested_data_save']);
+			add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ]);
 
+		}
+
+		public function enqueue_admin_assets( $hook ) {
+			if ( ! in_array( $hook, [ 'post.php', 'post-new.php' ], true ) ) {
+				return;
+			}
+
+			$screen = get_current_screen();
+			if ( ! $screen || $screen->post_type !== 'ysp_yacht' ) {
+				return;
+			}
+
+			wp_enqueue_script( 'jquery-ui-sortable' );
 		}
 
 		public function nested_yachts_meta_boxes() {
@@ -88,18 +104,34 @@
 				update_post_meta($post_id, 'Engines', $engines);
 
 				$images = [];
+				$posted_images = [];
 
-				for ($im=0; $im <= 19; $im++) {
-
-					if (isset($_POST['YSP_Image_'.$im]) && !empty($_POST['YSP_Image_'.$im])) {
-						$images[ $im ]=(object) [
-							'Uri' => esc_url_raw( wp_unslash( $_POST['YSP_Image_'.$im] ) ),
-		 				];
+				if ( isset( $_POST['YSP_Images'] ) && is_array( $_POST['YSP_Images'] ) ) {
+					$posted_images = $_POST['YSP_Images'];
+				} else {
+					for ( $im = 0; $im < self::MAX_MANUAL_IMAGES; $im++ ) {
+						if ( isset( $_POST[ 'YSP_Image_' . $im ] ) ) {
+							$posted_images[] = $_POST[ 'YSP_Image_' . $im ];
+						}
 					}
-
 				}
 
-				update_post_meta($post_id, 'Images', array_values( $images ));
+				foreach ( $posted_images as $posted_url ) {
+					if ( count( $images ) >= self::MAX_MANUAL_IMAGES ) {
+						break;
+					}
+
+					$url = esc_url_raw( wp_unslash( $posted_url ) );
+					if ( $url === '' ) {
+						continue;
+					}
+
+					$images[] = (object) [
+						'Uri' => $url,
+					];
+				}
+
+				update_post_meta( $post_id, 'Images', $images );
 
 				$youtube_data = [];
 				for ( $v = 0; $v < 3; $v++ ) {

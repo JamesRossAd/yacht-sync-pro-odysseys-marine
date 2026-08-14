@@ -217,71 +217,249 @@
         <input type="text" name="YSP_Engine_2_Boat_Engine_Location_Code" value="<?= $yacht_ysp_engine_2_boat_engine_location_code ?>">
     </div>
 
-    <?php for($x = 0; $x <= 19; $x++) { 
-        if (isset($images[ ($x) ]->Uri)) : 
-            $v = $images[ ($x) ]->Uri;
-        else:
-            $v = '';
-        endif;
-        ?>
-        <div class="metafield">
-            <label>YSP Image <?= $x ?></label>
-            
-            <input type="text" name="YSP_Image_<?= $x ?>" value="<?= $v ?>">
+    <?php
+        $max_manual_images = class_exists( 'YachtSyncPro_Yachts_NestedMetaSections' )
+            ? YachtSyncPro_Yachts_NestedMetaSections::MAX_MANUAL_IMAGES
+            : 150;
 
-            <input type="button" value="Or Upload" data-name="YSP_Image_<?= $x ?>" class="ysp-manual-images-uploads">
+        $image_urls = [];
+        if ( is_array( $images ) ) {
+            foreach ( $images as $image ) {
+                $uri = '';
+                if ( is_object( $image ) && ! empty( $image->Uri ) ) {
+                    $uri = $image->Uri;
+                } elseif ( is_array( $image ) && ! empty( $image['Uri'] ) ) {
+                    $uri = $image['Uri'];
+                }
+                if ( $uri !== '' ) {
+                    $image_urls[] = $uri;
+                }
+            }
+        }
+        $image_count = count( $image_urls );
+    ?>
+
+    <div class="ysp-manual-images" data-max="<?= (int) $max_manual_images ?>">
+        <h3>Listing Photos</h3>
+        <p class="description">Drag photos to change their order. The first photo is used as the listing image. You can add up to <?= (int) $max_manual_images ?> photos.</p>
+        <p class="ysp-manual-images-count"><span class="ysp-manual-images-count-num"><?= (int) $image_count ?></span> / <?= (int) $max_manual_images ?> photos</p>
+
+        <div class="ysp-manual-images-toolbar">
+            <button type="button" class="button button-primary ysp-images-add-media">Add from Media Library</button>
+            <button type="button" class="button ysp-images-add-url">Add URL</button>
         </div>
-    <?php } ?>
+
+        <div id="ysp-manual-images-list" class="ysp-manual-images-list">
+            <?php foreach ( $image_urls as $index => $url ) : ?>
+                <div class="ysp-image-card">
+                    <div class="ysp-image-card-preview">
+                        <span class="ysp-image-card-handle dashicons dashicons-move" title="Drag to reorder"></span>
+                        <span class="ysp-image-card-index"><?= (int) ( $index + 1 ) ?></span>
+                        <img src="<?= esc_url( $url ) ?>" alt="" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="ysp-image-card-placeholder" style="display:none;">No preview</div>
+                    </div>
+                    <input type="text" name="YSP_Images[]" class="ysp-image-url" value="<?= esc_attr( $url ) ?>" placeholder="https://">
+                    <div class="ysp-image-card-actions">
+                        <button type="button" class="button ysp-image-replace">Replace</button>
+                        <button type="button" class="button-link ysp-image-remove">Remove</button>
+                    </div>
+                </div>
+            <?php endforeach; ?>
+        </div>
+
+        <p class="ysp-manual-images-empty"<?= $image_count ? ' style="display:none;"' : '' ?>>No photos yet. Add images from the media library or paste a URL.</p>
+    </div>
 </div>
 
 <script type="text/javascript">
+jQuery(function($) {
+    var $wrap = $('.ysp-manual-images');
+    if (!$wrap.length) {
+        return;
+    }
 
-    // jQuery().each(function() {jQuery(this)
-    jQuery('#yacht-nested-metabox-basics .ysp-manual-images-uploads').each(function() {
-    
-        jQuery(this).on('click', function(e) {
-            e.preventDefault();
+    var maxImages = parseInt($wrap.data('max'), 10) || 150;
+    var $list = $('#ysp-manual-images-list');
+    var $empty = $wrap.find('.ysp-manual-images-empty');
+    var $count = $wrap.find('.ysp-manual-images-count-num');
+    var addFrame;
+    var replaceFrame;
+    var replaceCard;
 
-            // Uploading files
-            let file_frame;
+    function cardCount() {
+        return $list.children('.ysp-image-card').length;
+    }
 
-            let name = jQuery(this).data('name');
+    function remainingSlots() {
+        return Math.max(0, maxImages - cardCount());
+    }
 
+    function refreshUi() {
+        var total = cardCount();
+        $count.text(total);
+        $empty.toggle(total === 0);
+        $wrap.find('.ysp-images-add-media, .ysp-images-add-url').prop('disabled', remainingSlots() === 0);
+        $list.children('.ysp-image-card').each(function(i) {
+            $(this).find('.ysp-image-card-index').text(i + 1);
+            $(this).toggleClass('is-listing-photo', i === 0);
+        });
+    }
 
-            // If the media frame already exists, reopen it.
-            if (file_frame) {
-                file_frame.open();
-                return;
-            }
+    function bindPreviewError($card) {
+        $card.find('img').off('error.yspImages').on('error.yspImages', function() {
+            $(this).hide();
+            $(this).siblings('.ysp-image-card-placeholder').css('display', 'flex');
+        });
+    }
 
-            // Create the media frame.
-            file_frame = wp.media.frames.file_frame = wp.media({
-                title: jQuery(this).data('name'),
-                button: {
-                    text: 'select',
-                },
-                multiple: false // Set to true to allow multiple files to be selected
-            });
+    function setPreview($card, url) {
+        var $img = $card.find('img');
+        var $placeholder = $card.find('.ysp-image-card-placeholder');
+        if (url) {
+            $img.attr('src', url).show();
+            $placeholder.hide();
+        } else {
+            $img.removeAttr('src').hide();
+            $placeholder.css('display', 'flex');
+        }
+    }
 
-            // When a file is selected, run a callback.
-            file_frame.on('select', function() {
-                // We set multiple to false so only get one image from the uploader
-                let attachment = file_frame.state().get('selection').first().toJSON();
+    function makeCard(url) {
+        url = url || '';
+        var $card = $('<div class="ysp-image-card"></div>');
+        $card.append(
+            '<div class="ysp-image-card-preview">' +
+                '<span class="ysp-image-card-handle dashicons dashicons-move" title="Drag to reorder"></span>' +
+                '<span class="ysp-image-card-index"></span>' +
+                '<img alt="">' +
+                '<div class="ysp-image-card-placeholder">No preview</div>' +
+            '</div>' +
+            '<input type="text" name="YSP_Images[]" class="ysp-image-url" placeholder="https://">' +
+            '<div class="ysp-image-card-actions">' +
+                '<button type="button" class="button ysp-image-replace">Replace</button>' +
+                '<button type="button" class="button-link ysp-image-remove">Remove</button>' +
+            '</div>'
+        );
+        $card.find('.ysp-image-url').val(url);
+        bindPreviewError($card);
+        setPreview($card, url);
+        return $card;
+    }
 
-                let url = attachment.url;
+    if ($.fn.sortable) {
+        $list.sortable({
+            items: '.ysp-image-card',
+            handle: '.ysp-image-card-handle, .ysp-image-card-preview',
+            placeholder: 'ysp-image-card-placeholder-sort',
+            forcePlaceholderSize: true,
+            opacity: 0.85,
+            tolerance: 'pointer',
+            start: function(e, ui) {
+                ui.placeholder.height(ui.item.outerHeight());
+                ui.placeholder.width(ui.item.outerWidth());
+            },
+            update: refreshUi
+        });
+    }
 
-                let field = document.querySelector('#yacht-nested-metabox-basics input[name="'+ name +'"]');
-
-                field.value = url; //set which variable you want the field to have
-            });
-
-            // Finally, open the modal
-            file_frame.open();
-        })
+    $list.children('.ysp-image-card').each(function() {
+        bindPreviewError($(this));
     });
 
-</script>
+    $wrap.on('click', '.ysp-images-add-media', function(e) {
+        e.preventDefault();
+        if (remainingSlots() === 0) {
+            window.alert('You can add up to ' + maxImages + ' photos.');
+            return;
+        }
 
+        if (addFrame) {
+            addFrame.open();
+            return;
+        }
+
+        addFrame = wp.media({
+            title: 'Add listing photos',
+            button: { text: 'Add photos' },
+            library: { type: 'image' },
+            multiple: true
+        });
+
+        addFrame.on('select', function() {
+            var selection = addFrame.state().get('selection');
+            var added = 0;
+            selection.each(function(attachment) {
+                if (remainingSlots() === 0) {
+                    return;
+                }
+                var data = attachment.toJSON();
+                if (data && data.url) {
+                    $list.append(makeCard(data.url));
+                    added++;
+                }
+            });
+            refreshUi();
+            if (selection.length > added) {
+                window.alert('Only ' + added + ' photo(s) were added because the limit is ' + maxImages + '.');
+            }
+        });
+
+        addFrame.open();
+    });
+
+    $wrap.on('click', '.ysp-images-add-url', function(e) {
+        e.preventDefault();
+        if (remainingSlots() === 0) {
+            window.alert('You can add up to ' + maxImages + ' photos.');
+            return;
+        }
+        var $card = makeCard('');
+        $list.append($card);
+        refreshUi();
+        $card.find('.ysp-image-url').focus();
+    });
+
+    $wrap.on('click', '.ysp-image-replace', function(e) {
+        e.preventDefault();
+        replaceCard = $(this).closest('.ysp-image-card');
+
+        if (replaceFrame) {
+            replaceFrame.open();
+            return;
+        }
+
+        replaceFrame = wp.media({
+            title: 'Replace photo',
+            button: { text: 'Use this photo' },
+            library: { type: 'image' },
+            multiple: false
+        });
+
+        replaceFrame.on('select', function() {
+            var attachment = replaceFrame.state().get('selection').first().toJSON();
+            if (replaceCard && attachment && attachment.url) {
+                replaceCard.find('.ysp-image-url').val(attachment.url);
+                setPreview(replaceCard, attachment.url);
+            }
+        });
+
+        replaceFrame.open();
+    });
+
+    $wrap.on('click', '.ysp-image-remove', function(e) {
+        e.preventDefault();
+        $(this).closest('.ysp-image-card').remove();
+        refreshUi();
+    });
+
+    $wrap.on('input change', '.ysp-image-url', function() {
+        var $card = $(this).closest('.ysp-image-card');
+        setPreview($card, $.trim($(this).val()));
+    });
+
+    refreshUi();
+});
+</script>
 
 <style type="text/css">
 	#yacht-nested-metabox-basics .metafield{
@@ -306,5 +484,122 @@
 	}
     #yacht-nested-metabox-basics .metafield input[type="button"]{
         margin-top: 20px;
+    }
+
+    .ysp-manual-images {
+        margin-top: 24px;
+        padding-top: 8px;
+        border-top: 1px solid #c3c4c7;
+    }
+    .ysp-manual-images h3 {
+        margin: 16px 0 8px;
+    }
+    .ysp-manual-images-count {
+        font-weight: 600;
+        margin: 8px 0 12px;
+    }
+    .ysp-manual-images-toolbar {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 16px;
+    }
+    .ysp-manual-images-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    .ysp-image-card,
+    .ysp-image-card-placeholder-sort {
+        flex: 1 1 220px;
+        max-width: 260px;
+    }
+    .ysp-image-card {
+        background: #fff;
+        border: 1px solid #c3c4c7;
+        border-radius: 4px;
+        padding: 8px;
+        box-sizing: border-box;
+    }
+    .ysp-image-card.is-listing-photo {
+        border-color: #2271b1;
+        box-shadow: 0 0 0 1px #2271b1;
+    }
+    .ysp-image-card-preview {
+        position: relative;
+        height: 150px;
+        background: #f0f0f1;
+        border-radius: 2px;
+        overflow: hidden;
+        cursor: move;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .ysp-image-card-preview img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    .ysp-image-card-placeholder {
+        color: #646970;
+        font-size: 12px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+    }
+    .ysp-image-card-handle {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        background: rgba(255,255,255,.9);
+        border-radius: 2px;
+        z-index: 2;
+        cursor: move;
+    }
+    .ysp-image-card-index {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        background: rgba(0,0,0,.7);
+        color: #fff;
+        font-size: 11px;
+        line-height: 1;
+        padding: 4px 6px;
+        border-radius: 2px;
+        z-index: 2;
+    }
+    .ysp-image-card.is-listing-photo .ysp-image-card-index:after {
+        content: " listing";
+        text-transform: lowercase;
+        font-weight: 400;
+    }
+    .ysp-image-card .ysp-image-url {
+        width: 100%;
+        max-width: none;
+        margin-bottom: 8px;
+    }
+    .ysp-image-card-actions {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .ysp-image-remove {
+        color: #b32d2e;
+        text-decoration: none;
+    }
+    .ysp-image-card-placeholder-sort {
+        border: 2px dashed #2271b1;
+        background: #f0f6fc;
+        border-radius: 4px;
+        min-height: 230px;
+    }
+    .ysp-manual-images-empty {
+        color: #646970;
+        font-style: italic;
     }
 </style>
