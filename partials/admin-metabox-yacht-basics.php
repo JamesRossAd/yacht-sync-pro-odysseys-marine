@@ -5,17 +5,10 @@
 	$yacht_ysp_city = get_post_meta( $post->ID, 'YSP_City', true );
 	$yacht_ysp_country_id = get_post_meta( $post->ID, 'YSP_CountryID', true );
 	$yacht_ysp_state = get_post_meta( $post->ID, 'YSP_State', true );
-	$yacht_ysp_engine_count = get_post_meta( $post->ID, 'YSP_EngineCount', true );
-	$yacht_ysp_engine_fuel = get_post_meta( $post->ID, 'YSP_EngineFuel', true );
-	$yacht_ysp_engine_hours = get_post_meta( $post->ID, 'YSP_EngineHours', true );
-	$yacht_ysp_engine_model = get_post_meta( $post->ID, 'YSP_EngineModel', true );
-	$yacht_ysp_engine_power = get_post_meta( $post->ID, 'YSP_EnginePower', true );
-	$yacht_ysp_engine_type = get_post_meta( $post->ID, 'YSP_EngineType', true );
 	$yacht_ysp_usd_val = get_post_meta( $post->ID, 'YSP_USDVal', true );
 	$yacht_norm_price = get_post_meta( $post->ID, 'NormPrice', true );
 	$yacht_ysp_euro_val = get_post_meta( $post->ID, 'YSP_EuroVal', true );
 	$yacht_ysp_aud_val = get_post_meta( $post->ID, 'YSP_AUDVal', true );
-	$yacht_ysp_loa_feet = get_post_meta( $post->ID, 'YSP_LOAFeet', true );
 	$yacht_ysp_loa_meter = get_post_meta( $post->ID, 'YSP_LOAMeter', true );
 	$yacht_ysp_length = get_post_meta( $post->ID, 'YSP_Length', true );
 	$yacht_ysp_NominalLength = get_post_meta( $post->ID, 'NominalLength', true );
@@ -26,7 +19,6 @@
 	$yacht_sales_status = get_post_meta( $post->ID, 'SalesStatus', true );
 	$yacht_sale_class_code = get_post_meta( $post->ID, 'SaleClassCode', true );
 
-	$yacht_additional_detail_description = get_post_meta( $post->ID, 'AdditionalDetailDescription', true );
 	$yacht_boat_category_code = get_post_meta( $post->ID, 'BoatCategoryCode', true );
 	$yacht_boat_class_code = get_post_meta( $post->ID, 'BoatClassCode', true );
 	$yacht_boat_class_code_value = is_array($yacht_boat_class_code) ? ($yacht_boat_class_code[0] ?? '') : (string) $yacht_boat_class_code;
@@ -37,7 +29,6 @@
 	$yacht_company_boat = get_post_meta( $post->ID, 'CompanyBoat', true );
 	$yacht_company_name = get_post_meta( $post->ID, 'CompanyName', true );
 	$yacht_document_id = get_post_meta( $post->ID, 'DocumentID', true );
-	$yacht_general_boat_description = get_post_meta( $post->ID, 'GeneralBoatDescription', true );
 	$yacht_fuel_tank_capacity_measure = get_post_meta( $post->ID, 'FuelTankCapacityMeasure', true );
 	$yacht_fuel_tank_count_numeric = get_post_meta( $post->ID, 'FuelTankCountNumeric', true );
 	$yacht_fuel_tank_material_code = get_post_meta( $post->ID, 'FuelTankMaterialCode', true );
@@ -56,9 +47,9 @@
 	$yacht_ysp_company_weight = get_post_meta( $post->ID, 'CompanyWeight', true );
 	$yacht_ysp_sales_status_weight = get_post_meta( $post->ID, 'SalesStatusWeight', true );
 
-	$yacht_price = get_post_meta( $post->ID, 'Price', true );
 	$yacht_cabins_count = get_post_meta( $post->ID, 'CabinsCountNumeric', true );
 	$yacht_number_of_engines = get_post_meta( $post->ID, 'NumberOfEngines', true );
+	$yacht_ysp_engine_count = get_post_meta( $post->ID, 'YSP_EngineCount', true );
 	$yacht_cruising_speed = get_post_meta( $post->ID, 'CruisingSpeedMeasure', true );
 	$yacht_max_speed = get_post_meta( $post->ID, 'MaximumSpeedMeasure', true );
 	$yacht_dry_weight = get_post_meta( $post->ID, 'DryWeightMeasure', true );
@@ -71,99 +62,68 @@
 	$yacht_drive_type = get_post_meta( $post->ID, 'DriveTypeCode', true );
 	$yacht_range = get_post_meta( $post->ID, 'RangeMeasure', true );
 	$yacht_ysp_country = get_post_meta( $post->ID, 'YSP_Country', true );
-	$yacht_ysp_full_country = get_post_meta( $post->ID, 'YSP_Full_Country', true );
 	$yacht_ysp_beam_feet_measurement = get_post_meta( $post->ID, 'YSP_Beam_Feet_Measurement', true );
+
+	$length_ft = $yacht_ysp_NominalLength ?: $yacht_ysp_length;
+	$beam_ft = $yacht_ysp_beam_feet_measurement ?: $yacht_ysp_beam_feet;
+	$draft_ft = $yacht_max_draft_feet ?: ( is_numeric( $yacht_max_draft ) ? $yacht_max_draft : '' );
+	$price_usd = $yacht_norm_price !== '' && $yacht_norm_price !== null ? $yacht_norm_price : $yacht_ysp_usd_val;
+	$engine_count = $yacht_number_of_engines !== '' && $yacht_number_of_engines !== null ? $yacht_number_of_engines : $yacht_ysp_engine_count;
+	$country_display = $yacht_ysp_country ?: $yacht_ysp_country_id;
 ?>
 <div id="yacht-metabox-basics">
+	<p class="description" style="margin-bottom:16px;">Duplicate length/beam/engine fields were removed. Engine details are edited in <strong>Other Yacht Info</strong>.</p>
+
+	<h3>Dimensions</h3>
 	<div class="metafield">
-		<label>Beam Measure (ft)</label>
-		<input type="number" name="YSP_BeamFeet" step="0.1" value="<?= esc_attr( $yacht_ysp_beam_feet ) ?>">
+		<label>Length (ft) <span style="color:#b32d2e;">*</span></label>
+		<input type="text" name="NominalLength" id="ysp_nominal_length" value="<?= esc_attr( $length_ft ) ?>" required placeholder="e.g. 34">
+		<p class="description">Used for search results and listing specs. Also syncs Overall Length / Length meta.</p>
 	</div>
 	<div class="metafield">
-		<label>Beam Feet (display)</label>
-		<input type="number" name="YSP_Beam_Feet_Measurement" step="0.1" value="<?= esc_attr( $yacht_ysp_beam_feet_measurement ?: $yacht_ysp_beam_feet ) ?>">
-		<p class="description">Used on the listing specs. Defaults from Beam Measure if empty.</p>
+		<label>Length (m)</label>
+		<input type="number" name="YSP_LOAMeter" step="0.1" value="<?= esc_attr( $yacht_ysp_loa_meter ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Beam Measure (m)</label>
+		<label>Beam (ft)</label>
+		<input type="number" name="YSP_Beam_Feet_Measurement" step="0.1" value="<?= esc_attr( $beam_ft ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Beam (m)</label>
 		<input type="number" name="YSP_BeamMeter" step="0.1" value="<?= esc_attr( $yacht_ysp_beam_meter ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Max Draft</label>
-		<input type="text" name="MaxDraft" value="<?= esc_attr( $yacht_max_draft ) ?>" placeholder="e.g. 4.5 ft">
+		<label>Max Draft (ft)</label>
+		<input type="number" name="YSP_Max_Draft_Feet_Measurement" step="0.1" value="<?= esc_attr( $draft_ft ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Max Draft (ft display)</label>
-		<input type="number" name="YSP_Max_Draft_Feet_Measurement" step="0.1" value="<?= esc_attr( $yacht_max_draft_feet ) ?>">
+		<label>Bridge Clearance</label>
+		<input type="text" name="BridgeClearanceMeasure" value="<?= esc_attr( $yacht_bridge_clearance ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Broker Name</label>
-		<input type="text" name="YSP_BrokerName" value="<?= esc_attr( $yacht_ysp_broker_name ) ?>">
+		<label>Dry Weight</label>
+		<input type="text" name="DryWeightMeasure" value="<?= esc_attr( $yacht_dry_weight ) ?>">
 	</div>
+
+	<h3>Location</h3>
 	<div class="metafield">
-		<label>Yacht City Name</label>
+		<label>City</label>
 		<input type="text" name="YSP_City" value="<?= esc_attr( $yacht_ysp_city ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Yacht Country Code / Name</label>
-		<input type="text" name="YSP_CountryID" value="<?= esc_attr( $yacht_ysp_country_id ) ?>" placeholder="US or United States">
-	</div>
-	<div class="metafield">
-		<label>Yacht Country (display)</label>
-		<input type="text" name="YSP_Country" value="<?= esc_attr( $yacht_ysp_country ?: $yacht_ysp_country_id ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Full Country Name</label>
-		<input type="text" name="YSP_Full_Country" value="<?= esc_attr( $yacht_ysp_full_country ) ?>" placeholder="United States">
-	</div>
-	<div class="metafield">
-		<label>Yacht State Name</label>
+		<label>State</label>
 		<input type="text" name="YSP_State" value="<?= esc_attr( $yacht_ysp_state ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Country Weight</label>
-		<input type="number" name="COUNTRY_WEIGHT" value="<?= esc_attr( $yacht_ysp_country_weight ) ?>">
+		<label>Country</label>
+		<input type="text" name="YSP_Country" value="<?= esc_attr( $country_display ) ?>" placeholder="US or United States">
 	</div>
+
+	<h3>Pricing</h3>
 	<div class="metafield">
-		<label>Engine Count</label>
-		<input type="text" name="YSP_EngineCount" value="<?= esc_attr( $yacht_ysp_engine_count ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Number of Engines</label>
-		<input type="number" name="NumberOfEngines" value="<?= esc_attr( $yacht_number_of_engines ?: $yacht_ysp_engine_count ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Engine Fuel</label>
-		<input type="text" name="YSP_EngineFuel" value="<?= esc_attr( $yacht_ysp_engine_fuel ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Engine Hours</label>
-		<input type="number" name="YSP_EngineHours" value="<?= esc_attr( $yacht_ysp_engine_hours ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Engine Model</label>
-		<input type="text" name="YSP_EngineModel" value="<?= esc_attr( $yacht_ysp_engine_model ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Engine Power</label>
-		<input type="text" name="YSP_EnginePower" value="<?= esc_attr( $yacht_ysp_engine_power ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Engine Type</label>
-		<input type="text" name="YSP_EngineType" value="<?= esc_attr( $yacht_ysp_engine_type ) ?>">
-	</div>
-	<div class="metafield">
-		<label>YSP USD Value</label>
-		<input type="number" name="YSP_USDVal" value="<?= esc_attr( $yacht_ysp_usd_val ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Price (USD numeric)</label>
-		<input type="number" name="NormPrice" value="<?= esc_attr( $yacht_norm_price ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Price (display)</label>
-		<input type="text" name="Price" value="<?= esc_attr( $yacht_price ) ?>" placeholder="e.g. 450000.00 USD">
-		<p class="description">Shown on listing/search. Auto-filled from Price (USD numeric) if left blank.</p>
+		<label>Price (USD)</label>
+		<input type="number" name="NormPrice" value="<?= esc_attr( $price_usd ) ?>">
+		<p class="description">Also updates display price and USD value used on cards/search.</p>
 	</div>
 	<div class="metafield">
 		<label>Price (EUR)</label>
@@ -173,27 +133,8 @@
 		<label>Price (AUD)</label>
 		<input type="number" name="YSP_AUDVal" value="<?= esc_attr( $yacht_ysp_aud_val ) ?>">
 	</div>
-	<div class="metafield">
-		<label>Length (ft)</label>
-		<input type="text" name="YSP_Length" id="ysp_length_ft" value="<?= esc_attr($yacht_ysp_length) ?>" placeholder="e.g. 55">
-	</div>
-	<div class="metafield">
-		<label>Nominal Length (ft) <span style="color:#b32d2e;">*</span></label>
-		<input type="text" name="NominalLength" id="ysp_nominal_length" value="<?= esc_attr($yacht_ysp_NominalLength) ?>" required placeholder="Required — used in search results">
-		<p class="description">Required. If you fill Length above, this will auto-fill.</p>
-	</div>
-	<div class="metafield">
-		<label>Overall Length (ft)</label>
-		<input type="number" name="YSP_LOAFeet" step="0.1" value="<?= esc_attr( $yacht_ysp_loa_feet ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Overall Length (m)</label>
-		<input type="number" name="YSP_LOAMeter" step="0.1" value="<?= esc_attr( $yacht_ysp_loa_meter ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Listing Date</label>
-		<input type="date" name="YSP_ListingDate" value="<?= esc_attr( $yacht_ysp_listing_date ) ?>">
-	</div>
+
+	<h3>Core Listing</h3>
 	<div class="metafield">
 		<label>Make</label>
 		<input type="text" name="MakeString" value="<?= esc_attr( $yacht_make_string ) ?>">
@@ -205,6 +146,10 @@
 	<div class="metafield">
 		<label>Year</label>
 		<input type="number" name="ModelYear" min="1900" max="<?= (string) date("Y") + 1 ?>" value="<?= esc_attr( $yacht_model_year ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Yacht Name</label>
+		<input type="text" name="BoatName" value="<?= esc_attr( $yacht_boat_name ) ?>">
 	</div>
 	<div class="metafield">
 		<label>Builder Name</label>
@@ -219,41 +164,12 @@
 		<input type="text" name="StockNumber" value="<?= esc_attr( $yacht_stock_number ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Cabins / Staterooms</label>
-		<input type="number" name="CabinsCountNumeric" value="<?= esc_attr( $yacht_cabins_count ) ?>">
+		<label>Listing Date</label>
+		<input type="date" name="YSP_ListingDate" value="<?= esc_attr( $yacht_ysp_listing_date ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Cruising Speed</label>
-		<input type="text" name="CruisingSpeedMeasure" value="<?= esc_attr( $yacht_cruising_speed ) ?>" placeholder="e.g. 22 kn">
-	</div>
-	<div class="metafield">
-		<label>Maximum Speed</label>
-		<input type="text" name="MaximumSpeedMeasure" value="<?= esc_attr( $yacht_max_speed ) ?>" placeholder="e.g. 30 kn">
-	</div>
-	<div class="metafield">
-		<label>Range</label>
-		<input type="text" name="RangeMeasure" value="<?= esc_attr( $yacht_range ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Dry Weight</label>
-		<input type="text" name="DryWeightMeasure" value="<?= esc_attr( $yacht_dry_weight ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Bridge Clearance</label>
-		<input type="text" name="BridgeClearanceMeasure" value="<?= esc_attr( $yacht_bridge_clearance ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Drive Type</label>
-		<input type="text" name="DriveTypeCode" value="<?= esc_attr( $yacht_drive_type ) ?>">
-	</div>
-	<div class="metafield">
-		<label>Make Weight</label>
-		<input type="number" name="MakeWeight" value="<?= esc_attr( $yacht_ysp_make_weight ) ?>">
-	</div>
-
-	<div class="metafield">
-		<label>Company Weight</label>
-		<input type="number" name="CompanyWeight" value="<?= esc_attr( $yacht_ysp_company_weight ) ?>">
+		<label>Broker Name</label>
+		<input type="text" name="YSP_BrokerName" value="<?= esc_attr( $yacht_ysp_broker_name ) ?>">
 	</div>
 	<div class="metafield">
 		<label>Sales Status</label>
@@ -264,15 +180,11 @@
 		</select>
 	</div>
 	<div class="metafield">
-		<label>Sale Status Code</label>
+		<label>Condition</label>
 		<select name="SaleClassCode">
 			<option value="New" <?php if ($yacht_sale_class_code == "New") echo "selected"; ?>>New</option>
 			<option value="Used" <?php if ($yacht_sale_class_code == "Used") echo "selected"; ?>>Used</option>
 		</select>
-	</div>
-	<div class="metafield">
-		<label>Sales Code Weight</label>
-		<input type="number" name="SalesStatusWeight" value="<?= esc_attr( $yacht_ysp_sales_status_weight ) ?>">
 	</div>
 	<div class="metafield">
 		<label>Yacht Category</label>
@@ -295,10 +207,6 @@
 		<input type="text" name="BoatHullMaterialCode" value="<?= esc_attr( $yacht_boat_hull_material_code ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Yacht Name</label>
-		<input type="text" name="BoatName" value="<?= esc_attr( $yacht_boat_name ) ?>">
-	</div>
-	<div class="metafield">
 		<label>Company Owned</label>
 		<select name="CompanyBoat">
 			<option value="0" <?php if ($yacht_company_boat == "0") echo "selected"; ?>>No</option>
@@ -312,6 +220,43 @@
 	<div class="metafield">
 		<label>Document ID</label>
 		<input type="text" name="DocumentID" value="<?= esc_attr( $yacht_document_id ) ?>">
+	</div>
+
+	<h3>Engines (summary)</h3>
+	<p class="description">Edit make/model/fuel/hours for each engine in <strong>Other Yacht Info</strong>.</p>
+	<div class="metafield">
+		<label>Number of Engines</label>
+		<input type="number" name="NumberOfEngines" value="<?= esc_attr( $engine_count ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Total Engine Hours</label>
+		<input type="number" name="TotalEngineHoursNumberic" value="<?= esc_attr( $yacht_total_engine_hours_numeric ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Total Engine Power</label>
+		<input type="text" name="TotalEnginePowerQuantity" value="<?= esc_attr( $yacht_total_engine_power_quantity ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Drive Type</label>
+		<input type="text" name="DriveTypeCode" value="<?= esc_attr( $yacht_drive_type ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Cruising Speed</label>
+		<input type="text" name="CruisingSpeedMeasure" value="<?= esc_attr( $yacht_cruising_speed ) ?>" placeholder="e.g. 22 kn">
+	</div>
+	<div class="metafield">
+		<label>Maximum Speed</label>
+		<input type="text" name="MaximumSpeedMeasure" value="<?= esc_attr( $yacht_max_speed ) ?>" placeholder="e.g. 30 kn">
+	</div>
+	<div class="metafield">
+		<label>Range</label>
+		<input type="text" name="RangeMeasure" value="<?= esc_attr( $yacht_range ) ?>">
+	</div>
+
+	<h3>Accommodations &amp; Tanks</h3>
+	<div class="metafield">
+		<label>Cabins / Staterooms</label>
+		<input type="number" name="CabinsCountNumeric" value="<?= esc_attr( $yacht_cabins_count ) ?>">
 	</div>
 	<div class="metafield">
 		<label>Heads Count</label>
@@ -353,56 +298,51 @@
 		<label>Water Tank Material</label>
 		<input type="text" name="WaterTankMaterialCode" value="<?= esc_attr( $yacht_water_tank_material_code ) ?>">
 	</div>
+
+	<h3>Ranking Weights</h3>
 	<div class="metafield">
-		<label>Total Engine Hours</label>
-		<input type="number" name="TotalEngineHoursNumberic" value="<?= esc_attr( $yacht_total_engine_hours_numeric ) ?>">
+		<label>Country Weight</label>
+		<input type="number" name="COUNTRY_WEIGHT" value="<?= esc_attr( $yacht_ysp_country_weight ) ?>">
 	</div>
 	<div class="metafield">
-		<label>Total Engine Power Quantity</label>
-		<input type="text" name="TotalEnginePowerQuantity" value="<?= esc_attr( $yacht_total_engine_power_quantity ) ?>">
+		<label>Make Weight</label>
+		<input type="number" name="MakeWeight" value="<?= esc_attr( $yacht_ysp_make_weight ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Company Weight</label>
+		<input type="number" name="CompanyWeight" value="<?= esc_attr( $yacht_ysp_company_weight ) ?>">
+	</div>
+	<div class="metafield">
+		<label>Sales Status Weight</label>
+		<input type="number" name="SalesStatusWeight" value="<?= esc_attr( $yacht_ysp_sales_status_weight ) ?>">
 	</div>
 </div>
 
 <style type="text/css">
+	#yacht-metabox-basics h3{
+		margin: 24px 0 8px;
+		padding-top: 8px;
+		border-top: 1px solid #c3c4c7;
+	}
+	#yacht-metabox-basics h3:first-of-type{
+		border-top: 0;
+		padding-top: 0;
+	}
 	#yacht-metabox-basics .metafield{
 		display: block;
 		margin-top: 10px;
 		margin-bottom: 10px;
 		padding-bottom: 10px;
 		border-bottom: 1px solid #000;
-
 	}
-
 	#yacht-metabox-basics .metafield label{
 		display: block;
 		margin-bottom: 10px;
 	}
-
-	#yacht-metabox-basics .metafield input{
+	#yacht-metabox-basics .metafield input,
+	#yacht-metabox-basics .metafield select{
 		display: block;
 		width: 100%;
 		max-width: 500px;
-
 	}
 </style>
-<script type="text/javascript">
-(function () {
-	var lengthInput = document.getElementById('ysp_length_ft');
-	var nominalInput = document.getElementById('ysp_nominal_length');
-	if (!lengthInput || !nominalInput) return;
-
-	function syncNominalFromLength() {
-		if (!nominalInput.value.trim() && lengthInput.value.trim()) {
-			nominalInput.value = lengthInput.value.trim();
-		}
-	}
-
-	lengthInput.addEventListener('input', syncNominalFromLength);
-	lengthInput.addEventListener('change', syncNominalFromLength);
-
-	var form = lengthInput.closest('form');
-	if (form) {
-		form.addEventListener('submit', syncNominalFromLength);
-	}
-})();
-</script>
