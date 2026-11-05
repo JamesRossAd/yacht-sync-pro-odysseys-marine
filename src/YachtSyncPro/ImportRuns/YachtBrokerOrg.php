@@ -216,13 +216,31 @@
 					
 					if (isset($row['Media']['VirtualTours'])) {
 						$virtualTourData = [];
+						$captainsViewUrl = '';
 						foreach ($row['Media']['VirtualTours'] as $tour) {
+							$tourUrl = isset($tour['VirtualTourURL']) ? trim((string) $tour['VirtualTourURL']) : '';
+							if ($tourUrl === '') {
+								continue;
+							}
+
+							$tourTitle = isset($tour['VirtualTourTitle']) ? (string) $tour['VirtualTourTitle'] : '';
+							$isCaptainsView = (bool) preg_match("/captain'?s?\\s*view/i", $tourTitle)
+								|| (stripos($tourUrl, 'captainsview360.com') !== false && stripos($tourUrl, '/experience') !== false);
+
+							if ($isCaptainsView && $captainsViewUrl === '') {
+								$captainsViewUrl = $tourUrl;
+								continue;
+							}
+
 							$virtualTourData[] = (object) [
-								'URL' => $tour['VirtualTourURL'],
+								'URL' => $tourUrl,
 							];
 						}
 
 						$theBoat['YSP_VirtualTours'] = $virtualTourData;
+						if ($captainsViewUrl !== '') {
+							$theBoat['YSP_CaptainsView360'] = $captainsViewUrl;
+						}
 					}
 
 					if (isset($row['NominalLength'])) {
